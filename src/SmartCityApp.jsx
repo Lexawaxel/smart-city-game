@@ -1,6 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  "https://oaxxoizstcclbuhjuhlh.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heHhvaXpzdGNjbGJ1aGp1aGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzkwMTcsImV4cCI6MjA2NTc1NTAxN30.Vh4elTReLKdm28hhR-3pBt_hOI83POunp-jKXqwLBLE"
+);
 
 const scenarios = [
   { text: "You enter a supermarket where an AI scans your emotions.", choices: [{ text: "Accept for personalized discounts", impact: 2 }, { text: "Decline and pay anonymously", impact: 0 }] },
@@ -15,9 +20,9 @@ const scenarios = [
   { text: "A mall tracks your phone's Bluetooth to analyze crowd flow.", choices: [{ text: "Leave Bluetooth on", impact: 2 }, { text: "Turn off Bluetooth before entering", impact: 0 }] },
 ];
 
-import { useEffect } from "react";
+const ScoreBoard = ({ onLogout }) => {
+  const [scores, setScores] = useState([]);
 
-const ScoreBoard = ({ scores, setScores, onLogout }) => {
   useEffect(() => {
     const fetchScores = async () => {
       const { data, error } = await supabase
@@ -27,7 +32,7 @@ const ScoreBoard = ({ scores, setScores, onLogout }) => {
       if (!error) setScores(data);
     };
     fetchScores();
-  }, [setScores]);
+  }, []);
 
   return (
     <div style={{ padding: '1rem' }}>
@@ -43,15 +48,6 @@ const ScoreBoard = ({ scores, setScores, onLogout }) => {
     </div>
   );
 };
-  <div style={{ padding: '1rem' }}>
-    <h2>Admin Panel - Scoreboard</h2>
-    <ul>
-      {scores.map((entry, idx) => (
-        <li key={idx}><strong>{entry.username}</strong>: {entry.score}</li>
-      ))}
-    </ul>
-  </div>
-);
 
 const Game = ({ username, onSave }) => {
   const [current, setCurrent] = useState(0);
@@ -65,14 +61,15 @@ const Game = ({ username, onSave }) => {
       setConfirmCount(confirmCount + 1);
       alert("Are you sure you want to give up convenience for privacy?");
     } else {
-      setScore(score + impact);
+      const newScore = score + impact;
+      setScore(newScore);
       setConfirmCount(0);
       setConfirmMax(Math.floor(Math.random() * 3) + 3);
       if (current < scenarios.length - 1) {
         setCurrent(current + 1);
       } else {
         setEnded(true);
-        onSave(username, score + impact);
+        onSave(username, newScore);
       }
     }
   };
@@ -88,7 +85,9 @@ const Game = ({ username, onSave }) => {
         <h2>Game Over, {username}!</h2>
         <p>Final Score: {score}</p>
         <p>{level}</p>
-        <button onClick={() => window.location.reload()} style={{ marginTop: "1rem", padding: "0.5rem 1rem", backgroundColor: "#ff00ff", color: "white", border: "none", borderRadius: "4px" }}>Replay</button>
+        <button onClick={() => window.location.reload()} style={{ marginTop: "1rem", padding: "0.5rem 1rem", backgroundColor: "#ff00ff", color: "white", border: "none", borderRadius: "4px" }}>
+          Replay
+        </button>
       </motion.div>
     );
   }
@@ -107,25 +106,19 @@ const Game = ({ username, onSave }) => {
   );
 };
 
-const supabase = createClient("https://oaxxoizstcclbuhjuhlh.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heHhvaXpzdGNjbGJ1aGp1aGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzkwMTcsImV4cCI6MjA2NTc1NTAxN30.Vh4elTReLKdm28hhR-3pBt_hOI83POunp-jKXqwLBLE");
-
 export default function SmartCityApp() {
   const [login, setLogin] = useState("");
   const [username, setUsername] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [scores, setScores] = useState([]);
 
-  const handleStart = () => {
-    if ((login === "user" && username) || login === "admin") {
-      setSubmitted(true);
-    } else {
-      alert("Enter valid login and username.");
-    }
+  const saveScore = async (username, score) => {
+    await supabase.from("scores").insert([{ username, score }]);
   };
 
-  const saveScore = (username, score) => {
-    supabase.from("scores").insert([{ username, score }]);
-    setScores([...scores, { username, score }]);
+  const handleLogout = () => {
+    setLogin("");
+    setUsername("");
+    setSubmitted(false);
   };
 
   return (
@@ -160,13 +153,16 @@ export default function SmartCityApp() {
             {login === "user" && (
               <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} style={{ margin: '0.5rem', padding: '0.5rem' }} />
             )}
-            <button onClick={handleStart} style={{ padding: '0.5rem 1rem', backgroundColor: '#ff00ff', color: 'white', border: 'none', borderRadius: '4px' }}>
+            <button onClick={() => {
+              if ((login === "user" && username) || login === "admin") setSubmitted(true);
+              else alert("Enter valid login and username.");
+            }} style={{ padding: '0.5rem 1rem', backgroundColor: '#ff00ff', color: 'white', border: 'none', borderRadius: '4px' }}>
               Start
             </button>
           </div>
         )}
         {submitted && login === "user" && <Game username={username} onSave={saveScore} />}
-        {submitted && login === "admin" && <ScoreBoard scores={scores} setScores={setScores} onLogout={() => { setLogin(""); setSubmitted(false); setUsername(""); }} />}
+        {submitted && login === "admin" && <ScoreBoard onLogout={handleLogout} />}
       </div>
     </main>
   );
