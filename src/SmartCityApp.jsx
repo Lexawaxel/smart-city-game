@@ -15,7 +15,34 @@ const scenarios = [
   { text: "A mall tracks your phone's Bluetooth to analyze crowd flow.", choices: [{ text: "Leave Bluetooth on", impact: 2 }, { text: "Turn off Bluetooth before entering", impact: 0 }] },
 ];
 
-const ScoreBoard = ({ scores }) => (
+import { useEffect } from "react";
+
+const ScoreBoard = ({ scores, setScores, onLogout }) => {
+  useEffect(() => {
+    const fetchScores = async () => {
+      const { data, error } = await supabase
+        .from("scores")
+        .select("*")
+        .order("score", { ascending: false });
+      if (!error) setScores(data);
+    };
+    fetchScores();
+  }, [setScores]);
+
+  return (
+    <div style={{ padding: '1rem' }}>
+      <h2>Admin Panel - Scoreboard</h2>
+      <ul>
+        {scores.map((entry, idx) => (
+          <li key={idx}><strong>{entry.username}</strong>: {entry.score}</li>
+        ))}
+      </ul>
+      <button onClick={onLogout} style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#ff00ff', color: 'white', border: 'none', borderRadius: '4px' }}>
+        Logout
+      </button>
+    </div>
+  );
+};
   <div style={{ padding: '1rem' }}>
     <h2>Admin Panel - Scoreboard</h2>
     <ul>
@@ -139,7 +166,7 @@ export default function SmartCityApp() {
           </div>
         )}
         {submitted && login === "user" && <Game username={username} onSave={saveScore} />}
-        {submitted && login === "admin" && <ScoreBoard scores={scores} />}
+        {submitted && login === "admin" && <ScoreBoard scores={scores} setScores={setScores} onLogout={() => { setLogin(""); setSubmitted(false); setUsername(""); }} />}
       </div>
     </main>
   );
