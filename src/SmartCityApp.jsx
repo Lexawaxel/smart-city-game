@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-// Supabase removed for local version
 
 // Save scores locally using localStorage
 // No external database needed
 //
-  "https://oaxxoizstcclbuhjuhlh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heHhvaXpzdGNjbGJ1aGp1aGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzkwMTcsImV4cCI6MjA2NTc1NTAxN30.Vh4elTReLKdm28hhR-3pBt_hOI83POunp-jKXqwLBLE"
 );
 
@@ -27,7 +25,6 @@ const ScoreBoard = ({ onLogout }) => {
 
   useEffect(() => {
     const fetchScores = async () => {
-      const { data, error } = await supabase
         .from("scores")
         .select("*")
         .order("score", { ascending: false });
