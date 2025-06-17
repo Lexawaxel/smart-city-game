@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-// Save scores locally using localStorage
-// No external database needed
-//
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heHhvaXpzdGNjbGJ1aGp1aGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzkwMTcsImV4cCI6MjA2NTc1NTAxN30.Vh4elTReLKdm28hhR-3pBt_hOI83POunp-jKXqwLBLE"
-);
-
 const scenarios = [
   { text: "You enter a supermarket where an AI scans your emotions.", choices: [{ text: "Accept for personalized discounts", impact: 2 }, { text: "Decline and pay anonymously", impact: 0 }] },
   { text: "A city app offers to track your movements to optimize traffic.", choices: [{ text: "Allow tracking", impact: 2 }, { text: "Refuse and use a paper map", impact: 0 }] },
@@ -24,13 +18,8 @@ const ScoreBoard = ({ onLogout }) => {
   const [scores, setScores] = useState([]);
 
   useEffect(() => {
-    const fetchScores = async () => {
-        .from("scores")
-        .select("*")
-        .order("score", { ascending: false });
-      if (!error) setScores(data);
-    };
-    fetchScores();
+    const saved = JSON.parse(localStorage.getItem("scores") || "[]");
+    setScores(saved.sort((a, b) => b.score - a.score));
   }, []);
 
   return (
@@ -110,7 +99,7 @@ export default function SmartCityApp() {
   const [username, setUsername] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const saveScore = async (username, score) => {
+  const saveScore = (username, score) => {
     const previous = JSON.parse(localStorage.getItem("scores") || "[]");
     localStorage.setItem("scores", JSON.stringify([...previous, { username, score }]));
   };
