@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { createClient } from "@supabase/supabase-js";
+// Supabase removed for local version
 
-const supabase = createClient(
+// Save scores locally using localStorage
+// No external database needed
+//
   "https://oaxxoizstcclbuhjuhlh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heHhvaXpzdGNjbGJ1aGp1aGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzkwMTcsImV4cCI6MjA2NTc1NTAxN30.Vh4elTReLKdm28hhR-3pBt_hOI83POunp-jKXqwLBLE"
 );
@@ -112,7 +114,8 @@ export default function SmartCityApp() {
   const [submitted, setSubmitted] = useState(false);
 
   const saveScore = async (username, score) => {
-    await supabase.from("scores").insert([{ username, score }]);
+    const previous = JSON.parse(localStorage.getItem("scores") || "[]");
+    localStorage.setItem("scores", JSON.stringify([...previous, { username, score }]));
   };
 
   const handleLogout = () => {
